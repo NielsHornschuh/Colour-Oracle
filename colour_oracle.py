@@ -14,6 +14,15 @@ Starten:  python colour_oracle.py
 Nodig:    Python 3.9+ met Tkinter. Geen pakketten van derden.
 """
 
+# ---------------------------------------------------------------------------
+# Imports
+# ---------------------------------------------------------------------------
+
+"""
+Bij importeren van colour_oracle.py worden deze modules pas geladen als ze nodig zijn in Python 3.15+ met de reden van optimalisatie,
+zonder dat het ten kosten gaat van voorgaande versies van Python (3.9 tot 3.14).
+"""
+
 __lazy_modules__ = {
     "math",
     "random",
