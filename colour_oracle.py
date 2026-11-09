@@ -25,7 +25,7 @@ from collections import defaultdict, deque
 TOTAL_ROUNDS = 100       # vaste spellengte
 WIN_THRESHOLD = 0.27     # de AI moet strikt onder deze nauwkeurigheid eindigen
 REVEAL_MS = 750          # hoe lang de gok van de AI zichtbaar blijft na een keuze
-SHUFFLE_MS = 250         # duur van de schudanimatie
+SHUFFLE_MS = 250         # duur van de shuffle animatie
 CREATOR_NAME = "Niels"   # naam op het beginscherm, voor vragen en uitleg
 
 # ---------------------------------------------------------------------------
@@ -92,7 +92,7 @@ def argmax_random(dist, rng):
 def to_colour_dist(pos_dist, order):
     """Zet een verdeling over schermposities om in een verdeling over kleuren.
 
-    order[positie] is de kleur die op die positie staat in de huidige ronde.
+    Order[positie] is de kleur die op die positie staat in de huidige ronde.
     """
     dist = [0.0] * N
     for pos, p in enumerate(pos_dist):
@@ -405,7 +405,7 @@ class ReactionStrategy:
 
     @staticmethod
     def _boost(weights, tiles, mass, trust):
-        # De kans dat de keuze in `tiles` valt is `mass`. Het effect schaalt met het vertrouwen.
+        # De kans dat de keuze in `tiles` valt, is `mass`. Het effect schaalt met het vertrouwen.
         share = len(tiles) / N
         mass = min(0.98, max(0.02, mass))
         inside = mass / share
@@ -796,7 +796,7 @@ class BrainPanel(tk.Canvas):
     def render(self, items, subs=(), sub_after=None):
         """items is een lijst van (label, gewicht). De hoogste krijgt een gouden balk.
 
-        subs is een lijst van (label, waarde van 0 tot 1). Die staan onder rij sub_after.
+        Subs is een lijst van (label, waarde van 0 tot 1). Die staan onder rij sub_after.
         """
         self.delete("all")
         top = max(w for _, w in items)
@@ -979,7 +979,7 @@ class App(tk.Tk):
 
     # ----- indeling -------------------------------------------------------
     def _stat(self, parent, title, column):
-        # Eén statistiekvak met titel, waarde en onderschrift. Het grid met
+        # Eén statistiekvak met titel, waarde en onderschrift. De grid met
         # uniform kolommen houdt alle vakken even breed en even hoog.
         box = tk.Frame(parent, bg=PANEL)
         box.grid(row=0, column=column, sticky="nsew", padx=6)
