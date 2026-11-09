@@ -6,11 +6,11 @@ getoond en schudden de tegels opnieuw. Onder de motorkap weegt een ensemble van
 heuristische voorspellers mee via een Hedge-achtige multiplicative weights update.
 
 Dev screen: druk op Ctrl+Shift+D om het zijmenu te openen of te sluiten. Het
-menu bevat twee schakelaars, beide uit bij de start: de strategiegewichten en
-de voorspelling van de AI voor de keuze. Geen van beide verandert hoe de AI
-voorspelt.
+menu toont altijd de strategieën met hun gewichten en heeft één schakelaar,
+uit bij de start: de voorspelling van de AI voor de keuze. Niets in het menu
+verandert hoe de AI voorspelt.
 
-Starten:  python color_oracle.py
+Starten:  python colour_oracle.py
 Nodig:    Python 3.9+ met Tkinter. Geen pakketten van derden.
 """
 
@@ -26,6 +26,7 @@ TOTAL_ROUNDS = 100       # vaste spellengte
 WIN_THRESHOLD = 0.27     # de AI moet strikt onder deze nauwkeurigheid eindigen
 REVEAL_MS = 750          # hoe lang de gok van de AI zichtbaar blijft na een keuze
 SHUFFLE_MS = 250         # duur van de schudanimatie
+CREATOR_NAME = "Niels"   # naam op het beginscherm, voor vragen en uitleg
 
 # ---------------------------------------------------------------------------
 # AI-instellingen
@@ -35,21 +36,21 @@ FLOOR = 0.03             # kleinste aandeel dat een strategie mag houden
 
 # Strategieën in het spel, in weergavevolgorde. Haal een sleutel weg om een
 # strategie uit te zetten.
-# Sleutels: colors, bias, random, streak, step, lag, reaction, position, pair
+# Sleutels: colours, bias, random, streak, step, lag, reaction, position, pair
 ACTIVE_STRATEGIES = (
-    "colors", "bias", "random", "streak", "step", "lag", "reaction", "position", "pair",
+    "colours", "bias", "random", "streak", "step", "lag", "reaction", "position", "pair",
 )
 
 # ---------------------------------------------------------------------------
 # Constanten
 # ---------------------------------------------------------------------------
-COLORS = {
+COLOURS = {
     "Red": "#ff4d5a",
     "Blue": "#3d8bff",
     "Green": "#2fd18b",
     "Yellow": "#ffc933",
 }
-NAMES = list(COLORS)
+NAMES = list(COLOURS)
 N = len(NAMES)
 UNIFORM = [1.0 / N] * N  # gelijke kans voor elke kleur
 
@@ -88,7 +89,7 @@ def argmax_random(dist, rng):
     return rng.choice(ties)
 
 
-def to_color_dist(pos_dist, order):
+def to_colour_dist(pos_dist, order):
     """Zet een verdeling over schermposities om in een verdeling over kleuren.
 
     order[positie] is de kleur die op die positie staat in de huidige ronde.
@@ -121,13 +122,13 @@ class MarkovStrategy:
                 return normalize([c + 0.5 for c in counts])
         return list(UNIFORM)
 
-    def update(self, color, pos=None, ai_guess=None, order=None):
+    def update(self, colour, pos=None, ai_guess=None, order=None):
         past = list(self.history)
         # Registreer de gekozen kleur bij elke contextlengte
         for k in range(1, self.max_order + 1):
             if len(past) >= k:
-                self.tables[k][tuple(past[-k:])][color] += 1
-        self.history.append(color)
+                self.tables[k][tuple(past[-k:])][colour] += 1
+        self.history.append(colour)
 
 
 class FrequencyStrategy:
@@ -151,14 +152,14 @@ class FrequencyStrategy:
             dist = normalize(dist)
         return dist
 
-    def update(self, color, pos=None, ai_guess=None, order=None):
+    def update(self, colour, pos=None, ai_guess=None, order=None):
         self.scores = [s * self.decay for s in self.scores]
-        self.scores[color] += 1.0
+        self.scores[colour] += 1.0
         if self.last is not None:
             self.transitions += 1
-            if color == self.last:
+            if colour == self.last:
                 self.repeats += 1
-        self.last = color
+        self.last = colour
 
 
 class RandomStrategy:
@@ -176,7 +177,7 @@ class RandomStrategy:
         dist[pick] += 0.7
         return dist
 
-    def update(self, color, pos=None, ai_guess=None, order=None):
+    def update(self, colour, pos=None, ai_guess=None, order=None):
         pass  # deze strategie leert niets
 
 
@@ -205,24 +206,24 @@ class StreakStrategy:
         dist = [0.0] * N
         dist[self.last] = r
         # De resterende kans (1 - r) wordt verdeeld over de andere kleuren
-        for color, w in zip(others, weights):
-            dist[color] = (1.0 - r) * w / total
+        for colour, w in zip(others, weights):
+            dist[colour] = (1.0 - r) * w / total
         return dist
 
-    def update(self, color, pos=None, ai_guess=None, order=None):
+    def update(self, colour, pos=None, ai_guess=None, order=None):
         if self.last is None:
             self.run = 1
         else:
             bucket = min(self.run, self.max_bucket)
-            if color == self.last:
+            if colour == self.last:
                 self.stats[bucket][0] += 1
                 self.run += 1
             else:
                 self.stats[bucket][1] += 1
                 self.run = 1
         self.prefs = [p * self.decay for p in self.prefs]
-        self.prefs[color] += 1.0
-        self.last = color
+        self.prefs[colour] += 1.0
+        self.last = colour
 
 
 class StepStrategy:
@@ -253,10 +254,10 @@ class StepStrategy:
                 # Een sprong van delta vanaf de laatste positie geeft de nieuwe positie
                 for delta, p in enumerate(delta_dist):
                     pos_dist[(self.last_pos + delta) % N] = p
-                return to_color_dist(pos_dist, order)
+                return to_colour_dist(pos_dist, order)
         return list(UNIFORM)
 
-    def update(self, color, pos=None, ai_guess=None, order=None):
+    def update(self, colour, pos=None, ai_guess=None, order=None):
         if self.last_pos is not None:
             delta = (pos - self.last_pos) % N   # sprong rond het scherm, modulo N
             for k in range(0, self.max_order + 1):
@@ -306,72 +307,172 @@ class LagStrategy:
             weights[c] *= inside if c in absent else outside
         return normalize(weights)
 
-    def update(self, color, pos=None, ai_guess=None, order=None):
+    def update(self, colour, pos=None, ai_guess=None, order=None):
         past = list(self.history)
         for lag in self.LAGS:
             if len(past) >= lag:
                 self.lag_trials[lag] += 1
-                if color == past[-lag]:
+                if colour == past[-lag]:
                     self.lag_hits[lag] += 1
         if len(past) >= self.WINDOW:
             absent = self._absent()
             self.cold_expected += len(absent) / N
-            if color in absent:
+            if colour in absent:
                 self.cold_hits += 1
-        self.history.append(color)
+        self.history.append(colour)
 
 
 class ReactionStrategy:
-    """Feedback: hoe jij reageert nadat de AI raak of mis gokte."""
+    """Feedback: toetst welke zichtbare terugkoppeling jouw gedrag verandert.
+
+    Drie signalen worden los van elkaar gemeten:
+      1. De getoonde nauwkeurigheid van de AI (groen onder de drempel, rood erboven).
+      2. Of de AI de vorige ronde raak of mis gokte.
+      3. Welke tegel tijdens het schudden het verst of het minst ver bewoog.
+    Elk signaal krijgt een vertrouwen tussen 0 en 1 uit een z-toets. Een signaal
+    zonder aantoonbare invloed krijgt vertrouwen 0 en telt dus niet mee.
+    """
 
     label = "Dodge & Reaction Tracker"
+    MIN_TRIALS = 5   # minimaal aantal waarnemingen per situatie voordat er getoetst wordt
 
     def __init__(self, rng=None):
-        self.last = None               # laatst gekozen kleur
-        self.ai_last = None            # laatste gok van de AI
-        self.hit_last = None           # raakte de AI de vorige ronde
-        # rep[raak] = [herhalingen, kansen] van jouw laatste kleur na een raak of mis
-        self.rep = {True: [0, 0], False: [0, 0]}
-        # adopt = [keren dat je de gok van de AI overnam, kansen] na een misser
-        self.adopt = [0, 0]
+        self.last = None            # laatst gekozen kleur
+        self.ai_last = None         # laatste gok van de AI
+        self.hit_last = None        # raakte de AI de vorige ronde
+        self.prev_order = None      # tegelvolgorde van de vorige ronde
+        self.n = 0                  # aantal gespeelde rondes
+        self.ai_hits = 0            # aantal AI-treffers, voor de getoonde nauwkeurigheid
+        # Per situatie: [keren dat je dezelfde kleur koos, aantal kansen]
+        self.stay_by_status = {True: [0, 0], False: [0, 0]}   # True = groen
+        self.stay_by_hit = {True: [0, 0], False: [0, 0]}      # True = AI had raak
+        self.adopt = [0, 0]         # na een misser: de gok van de AI overgenomen
+        # Beweging: hoe vaak je de grootste of kleinste verplaatser koos, en hoe vaak
+        # dat bij puur toeval verwacht was (met de bijbehorende variantie)
+        self.big = {"picked": 0.0, "expected": 0.0, "var": 0.0}
+        self.small = {"picked": 0.0, "expected": 0.0, "var": 0.0}
+        # Vertrouwen per signaal van de laatste voorspelling (bruikbaar voor het dev screen)
+        self.trust = {"accuracy": 0.0, "ai_result": 0.0, "movement": 0.0}
+
+    # ----- hulpfuncties ---------------------------------------------------
+    def _green(self):
+        # Zo ziet de speler de nauwkeurigheid: groen onder de drempel
+        return self.n == 0 or self.ai_hits / self.n < WIN_THRESHOLD
 
     @staticmethod
     def _rate(pair):
+        # Zachte schatting van een aandeel, met een kleine startwaarde
         return (pair[0] + 1.0) / (pair[1] + 4.0)
 
-    def predict(self, order):
-        if self.last is None or self.ai_last is None:
-            return list(UNIFORM)
-        r = self._rate(self.rep[self.hit_last])
-        if self.hit_last:
-            # Na een raak: herhaal je je kleur, of wissel je naar iets anders
-            dist = [(1.0 - r) / (N - 1)] * N
-            dist[self.last] = r
-            return dist
-        # Na een misser: herhaal je je kleur, neem je de gok van de AI over, of iets anders
-        a = self._rate(self.adopt)
-        if r + a > 0.98:
-            scale = 0.98 / (r + a)
-            r, a = r * scale, a * scale
-        rest = (1.0 - r - a) / (N - 2)
-        dist = [rest] * N
-        dist[self.last] = r
-        dist[self.ai_last] = a
-        return dist
+    TRUST_START = 1.0   # onder deze |z| is er geen aantoonbare invloed
+    TRUST_FULL = 2.0    # vanaf deze |z| is het vertrouwen volledig
 
-    def update(self, color, pos=None, ai_guess=None, order=None):
-        if self.last is not None and self.ai_last is not None:
-            pair = self.rep[self.hit_last]
-            pair[1] += 1
-            if color == self.last:
-                pair[0] += 1
-            if not self.hit_last:
+    @classmethod
+    def _trust(cls, z):
+        return min(1.0, max(0.0, (abs(z) - cls.TRUST_START) / (cls.TRUST_FULL - cls.TRUST_START)))
+
+    def _z_diff(self, a, b):
+        # Verschilt het aandeel van a = [successen, kansen] van dat van b?
+        (xa, na), (xb, nb) = a, b
+        if na < self.MIN_TRIALS or nb < self.MIN_TRIALS:
+            return 0.0
+        pooled = (xa + xb) / (na + nb)
+        spread = math.sqrt(pooled * (1.0 - pooled) * (1.0 / na + 1.0 / nb))
+        return 0.0 if spread == 0 else (xa / na - xb / nb) / spread
+
+    def _z_adopt(self):
+        # Wijkt het overnemen van de AI-gok af van de kans van 0.25?
+        successes, trials = self.adopt
+        if trials < self.MIN_TRIALS:
+            return 0.0
+        return (successes - 0.25 * trials) / math.sqrt(trials * 0.25 * 0.75)
+
+    @staticmethod
+    def _z_excess(group):
+        # Wijkt het aantal gekozen verplaatsers af van wat toeval zou geven?
+        if group["var"] <= 0:
+            return 0.0
+        return (group["picked"] - group["expected"]) / math.sqrt(group["var"])
+
+    def _movers(self, order):
+        # Grootste en kleinste verplaatsers sinds de vorige ronde, of None in ronde 1
+        if self.prev_order is None:
+            return None
+        dist = [abs(order.index(c) - self.prev_order.index(c)) for c in range(N)]
+        big = [c for c in range(N) if dist[c] == max(dist)]
+        small = [c for c in range(N) if dist[c] == min(dist)]
+        return big, small
+
+    @staticmethod
+    def _boost(weights, tiles, mass, trust):
+        # De kans dat de keuze in `tiles` valt is `mass`. Het effect schaalt met het vertrouwen.
+        share = len(tiles) / N
+        mass = min(0.98, max(0.02, mass))
+        inside = mass / share
+        outside = (1.0 - mass) / (1.0 - share)
+        for c in range(N):
+            weights[c] *= (inside if c in tiles else outside) ** trust
+
+    # ----- voorspellen en leren -------------------------------------------
+    def predict(self, order):
+        if self.last is None:
+            return list(UNIFORM)
+        weights = [1.0] * N
+        movers = self._movers(order)
+
+        # Vertrouwen per signaal
+        t_status = self._trust(
+            self._z_diff(self.stay_by_status[True], self.stay_by_status[False])
+        )
+        t_stay = self._trust(self._z_diff(self.stay_by_hit[True], self.stay_by_hit[False]))
+        t_adopt = self._trust(self._z_adopt())
+        t_big = self._trust(self._z_excess(self.big))
+        t_small = self._trust(self._z_excess(self.small))
+        self.trust = {
+            "accuracy": t_status,
+            "ai_result": max(t_stay, t_adopt),
+            "movement": max(t_big, t_small),
+        }
+
+        # 1. Getoonde nauwkeurigheid: blijf je bij je kleur in groen en wissel je in rood?
+        self._boost(weights, [self.last], self._rate(self.stay_by_status[self._green()]), t_status)
+        # 2. AI raak of mis: blijf je bij je kleur, of neem je de gok van de AI over?
+        if self.hit_last is not None:
+            self._boost(weights, [self.last], self._rate(self.stay_by_hit[self.hit_last]), t_stay)
+        if self.hit_last is False and self.ai_last is not None:
+            self._boost(weights, [self.ai_last], self._rate(self.adopt), t_adopt)
+        # 3. Beweging: trekt de tegel die het verst (of het minst) bewoog je aan?
+        if movers:
+            for group, tiles, t in ((self.big, movers[0], t_big), (self.small, movers[1], t_small)):
+                if len(tiles) < N:
+                    ratio = (group["picked"] + 1.0) / (group["expected"] + 1.0)
+                    self._boost(weights, tiles, ratio * len(tiles) / N, t)
+        return normalize(weights)
+
+    def update(self, colour, pos=None, ai_guess=None, order=None):
+        green = self._green()   # de status op het moment van de keuze
+        if self.last is not None and self.hit_last is not None:
+            stay = int(colour == self.last)
+            for pair in (self.stay_by_status[green], self.stay_by_hit[self.hit_last]):
+                pair[1] += 1
+                pair[0] += stay
+            if not self.hit_last and self.ai_last is not None:
                 self.adopt[1] += 1
-                if color == self.ai_last:
-                    self.adopt[0] += 1
-        self.last = color
+                self.adopt[0] += int(colour == self.ai_last)
+        movers = self._movers(order)
+        if movers:
+            for group, tiles in ((self.big, movers[0]), (self.small, movers[1])):
+                if len(tiles) < N:
+                    share = len(tiles) / N
+                    group["picked"] += int(colour in tiles)
+                    group["expected"] += share
+                    group["var"] += share * (1.0 - share)
+        self.n += 1
+        self.ai_hits += int(ai_guess == colour)
+        self.last = colour
         self.ai_last = ai_guess
-        self.hit_last = (ai_guess == color) if ai_guess is not None else None
+        self.hit_last = (ai_guess == colour) if ai_guess is not None else None
+        self.prev_order = list(order)
 
 
 class PositionStrategy:
@@ -404,9 +505,9 @@ class PositionStrategy:
         pos_dist[self.last_pos] = r
         for p, w in zip(others, weights):
             pos_dist[p] = (1.0 - r) * w / total
-        return to_color_dist(pos_dist, order)
+        return to_colour_dist(pos_dist, order)
 
-    def update(self, color, pos=None, ai_guess=None, order=None):
+    def update(self, colour, pos=None, ai_guess=None, order=None):
         if self.last_pos is None:
             self.run = 1
         else:
@@ -429,7 +530,7 @@ class PairStrategy:
     positie en kleur getoond is en hoe vaak het gekozen is.
     """
 
-    label = "Cyclic Loop & Pair Detector"
+    label = "Color-at-Position Tracker"
 
     def __init__(self, rng=None):
         self.chosen = [[0] * N for _ in range(N)]   # chosen[positie][kleur]
@@ -441,9 +542,9 @@ class PairStrategy:
             (self.chosen[p][order[p]] + 1.0) / (self.shown[p][order[p]] + 4.0)
             for p in range(N)
         ]
-        return to_color_dist(normalize(scores), order)
+        return to_colour_dist(normalize(scores), order)
 
-    def update(self, color, pos=None, ai_guess=None, order=None):
+    def update(self, colour, pos=None, ai_guess=None, order=None):
         for p in range(N):
             self.shown[p][order[p]] += 1
         self.chosen[pos][order[pos]] += 1
@@ -451,7 +552,7 @@ class PairStrategy:
 
 # Koppelt elke sleutel uit ACTIVE_STRATEGIES aan zijn klasse
 STRATEGY_CLASSES = {
-    "colors": MarkovStrategy,
+    "colours": MarkovStrategy,
     "bias": FrequencyStrategy,
     "random": RandomStrategy,
     "streak": StreakStrategy,
@@ -520,15 +621,15 @@ class Ensemble:
 
     def resolve(self, pos):
         """Leer van de keuze van de speler. Geeft True als de AI het goed had."""
-        color = self.order[pos]
-        hit = self.final == color
+        colour = self.order[pos]
+        hit = self.final == colour
         # Strategieën die goed gokten groeien met e^eta, de rest krimpt met e^-eta
         factors = [
-            math.exp(self.eta if pick == color else -self.eta) for pick in self.picks
+            math.exp(self.eta if pick == colour else -self.eta) for pick in self.picks
         ]
         self.weights = update_weights(self.weights, factors, self.floor)
         for strategy in self.strategies:
-            strategy.update(color, pos=pos, ai_guess=self.final, order=self.order)
+            strategy.update(colour, pos=pos, ai_guess=self.final, order=self.order)
         return hit
 
 
@@ -578,41 +679,41 @@ class TileBoard(tk.Canvas):
                 font=(FONT, 14, "bold"),
             )
         # Elke tegel krijgt een eigen tag, zodat alle onderdelen samen bewegen
-        for color in range(N):
-            x = self.slot_x(color)
-            tag = f"t{color}"
-            fill = COLORS[NAMES[color]]
-            self.rects[color] = self.create_polygon(
+        for colour in range(N):
+            x = self.slot_x(colour)
+            tag = f"t{colour}"
+            fill = COLOURS[NAMES[colour]]
+            self.rects[colour] = self.create_polygon(
                 rounded_points(x, self.TOP, x + self.TILE_W, self.TOP + self.TILE_H, 24),
                 smooth=True, fill=fill, outline=fill, width=4, tags=(tag,),
             )
             self.create_text(
-                x + self.TILE_W / 2, self.TOP + self.TILE_H / 2, text=NAMES[color],
+                x + self.TILE_W / 2, self.TOP + self.TILE_H / 2, text=NAMES[colour],
                 fill="#10131c", font=(FONT, 17, "bold"), tags=(tag,),
             )
             # Label boven de tegel (YOU, AI of YOU + AI), eerst verborgen
-            self.badges[color] = self.create_text(
+            self.badges[colour] = self.create_text(
                 x + self.TILE_W / 2, self.TOP - 18, text="", fill=FG,
                 font=(FONT, 11, "bold"), tags=(tag,), state="hidden",
             )
-            self.pos_x[color] = x
-            self.tag_bind(tag, "<Button-1>", lambda e, c=color: self._click(c))
-            self.tag_bind(tag, "<Enter>", lambda e, c=color: self._hover(c, True))
-            self.tag_bind(tag, "<Leave>", lambda e, c=color: self._hover(c, False))
+            self.pos_x[colour] = x
+            self.tag_bind(tag, "<Button-1>", lambda e, c=colour: self._click(c))
+            self.tag_bind(tag, "<Enter>", lambda e, c=colour: self._hover(c, True))
+            self.tag_bind(tag, "<Leave>", lambda e, c=colour: self._hover(c, False))
 
     def slot_x(self, pos):
         # x-coördinaat van de linkerrand van een positie
         return self.left + pos * (self.TILE_W + self.GAP)
 
-    def _click(self, color):
+    def _click(self, colour):
         if not self.locked:
-            self.on_click(color)
+            self.on_click(colour)
 
-    def _hover(self, color, inside):
+    def _hover(self, colour, inside):
         if self.locked:
             return
         self.itemconfig(
-            self.rects[color], outline="#ffffff" if inside else COLORS[NAMES[color]]
+            self.rects[colour], outline="#ffffff" if inside else COLOURS[NAMES[colour]]
         )
         self.config(cursor="hand2" if inside else "")
 
@@ -625,7 +726,7 @@ class TileBoard(tk.Canvas):
     def set_order(self, order, animate=False, on_done=None):
         """order[positie] is de kleur die daar staat."""
         self.cancel()
-        targets = {color: self.slot_x(pos) for pos, color in enumerate(order)}
+        targets = {colour: self.slot_x(pos) for pos, colour in enumerate(order)}
         starts = dict(self.pos_x)
         steps = max(2, SHUFFLE_MS // 16) if animate else 1  # ongeveer 60 beelden per seconde
 
@@ -654,7 +755,7 @@ class TileBoard(tk.Canvas):
     def highlight(self, picked, predicted):
         # Wis eerst de vorige markeringen
         for c in range(N):
-            self.itemconfig(self.rects[c], outline=COLORS[NAMES[c]], width=4, dash="")
+            self.itemconfig(self.rects[c], outline=COLOURS[NAMES[c]], width=4, dash="")
             self.itemconfig(self.badges[c], text="", state="hidden")
         if picked == predicted:
             self.itemconfig(self.rects[picked], outline="#ffffff", width=6)
@@ -667,7 +768,7 @@ class TileBoard(tk.Canvas):
 
     def clear_highlight(self):
         for c in range(N):
-            self.itemconfig(self.rects[c], outline=COLORS[NAMES[c]], width=4, dash="")
+            self.itemconfig(self.rects[c], outline=COLOURS[NAMES[c]], width=4, dash="")
             self.itemconfig(self.badges[c], text="", state="hidden")
 
 
@@ -675,29 +776,36 @@ class BrainPanel(tk.Canvas):
     """Live gewichten van de strategieën. Label en percentage boven, de balk eronder.
 
     De lange strategienamen hebben de volle paneelbreedte nodig, daarom heeft
-    elke rij twee regels in plaats van een labelkolom naast de balk.
+    elke rij twee regels in plaats van een labelkolom naast de balk. Onder één
+    gekozen rij staan kleine extra balken, zoals de drie vertrouwenswaarden van
+    de Dodge & Reaction Tracker. Die extra rijen hebben een vaste hoogte, dus
+    het paneel verandert nooit van grootte.
     """
 
     W = 330
     ROW = 44
+    SUB = 20      # hoogte van een kleine extra balk
     PAD = 14
 
-    def __init__(self, master, rows):
+    def __init__(self, master, rows, sub_rows=0):
         super().__init__(
-            master, width=self.W, height=self.PAD + rows * self.ROW, bg=PANEL,
-            highlightthickness=0,
+            master, width=self.W, height=self.PAD + rows * self.ROW + sub_rows * self.SUB + (6 if sub_rows else 0),
+            bg=PANEL, highlightthickness=0,
         )
 
-    def render(self, items):
-        """items is een lijst van (label, gewicht). De hoogste krijgt een gouden balk."""
+    def render(self, items, subs=(), sub_after=None):
+        """items is een lijst van (label, gewicht). De hoogste krijgt een gouden balk.
+
+        subs is een lijst van (label, waarde van 0 tot 1). Die staan onder rij sub_after.
+        """
         self.delete("all")
         top = max(w for _, w in items)
         lead = top - min(w for _, w in items) > 0.005  # alleen markeren bij een duidelijk verschil
         scale = max(top, 0.2)                          # de balken schalen mee met het hoogste gewicht
         bar_left, bar_right = self.PAD, self.W - self.PAD
         bar_width = bar_right - bar_left
+        y = 10
         for i, (label, weight) in enumerate(items):
-            y = 10 + i * self.ROW
             is_top = lead and weight == top
             self.create_text(
                 self.PAD, y + 8, text=label, anchor="w", fill=FG if is_top else MUTED,
@@ -712,12 +820,138 @@ class BrainPanel(tk.Canvas):
                 bar_left, y + 22, bar_left + bar_width * weight / scale, y + 32,
                 fill=GOLD if is_top else ACCENT, outline="",
             )
+            y += self.ROW
+            if i == sub_after:
+                for sub_label, value in subs:
+                    self._draw_sub(y, sub_label, value)
+                    y += self.SUB
+                y += 6   # een kleine ruimte voor de volgende rij
+
+    def _draw_sub(self, y, label, value):
+        # Eén kleine balk. Groen betekent: dit signaal heeft aantoonbare invloed op de speler.
+        left = self.PAD + 14
+        bar_left, bar_right = left + 112, self.W - self.PAD - 40
+        self.create_text(left, y + 6, text=label, anchor="w", fill=MUTED, font=(FONT, 9))
+        self.create_rectangle(bar_left, y + 2, bar_right, y + 10, fill=PANEL2, outline="")
+        if value > 0:
+            self.create_rectangle(
+                bar_left, y + 2, bar_left + (bar_right - bar_left) * value, y + 10,
+                fill=GOOD if value >= 0.5 else ACCENT, outline="",
+            )
+        self.create_text(
+            self.W - self.PAD, y + 6, text=f"{value * 100:.0f}%", anchor="e", fill=MUTED,
+            font=(FONT, 9),
+        )
+
+
+class HomeScreen(tk.Frame):
+    """Beginscherm: titel, doel van het spel, een startknop en een verwijzing voor uitleg."""
+
+    TILE = 74    # zijde van elk decoratief kleurvlak
+    GAP = 16     # ruimte tussen de kleurvlakken
+
+    def __init__(self, master, on_start):
+        super().__init__(master, bg=BG)
+        self.on_start = on_start
+        self.job = None          # lopende animatiestap
+        self.tick = 0
+        self.offsets = [0.0] * N  # huidige verticale afwijking per kleurvlak
+
+        card = tk.Frame(self, bg=BG)
+        card.place(relx=0.5, rely=0.5, anchor="center")
+
+        # Vier kleurvlakken die zachtjes op en neer zweven
+        width = N * self.TILE + (N - 1) * self.GAP
+        self.canvas = tk.Canvas(
+            card, width=width, height=self.TILE + 40, bg=BG, highlightthickness=0
+        )
+        self.canvas.pack(pady=(0, 6))
+        self.tiles = []
+        for i, name in enumerate(NAMES):
+            x = i * (self.TILE + self.GAP)
+            fill = COLOURS[name]
+            self.tiles.append(self.canvas.create_polygon(
+                rounded_points(x, 20, x + self.TILE, 20 + self.TILE, 18),
+                smooth=True, fill=fill, outline=fill,
+            ))
+
+        # De titel: elke letter in een eigen kleur uit het kleurenpalet
+        title = tk.Frame(card, bg=BG)
+        title.pack()
+        palette = list(COLOURS.values())
+        shade = 0
+        for char in "Colour Oracle":
+            if char == " ":
+                tk.Label(title, text=" ", bg=BG, font=(FONT, 40, "bold")).pack(side="left")
+                continue
+            tk.Label(
+                title, text=char, bg=BG, fg=palette[shade % N], font=(FONT, 60, "bold")
+            ).pack(side="left")
+            shade += 1
+        tk.Label(
+            card, text="Can you outsmart the AI?", bg=BG, fg=FG, font=(FONT, 18)
+        ).pack(pady=(2, 0))
+
+        # Kaart met het doel van het spel
+        mission = tk.Frame(card, bg=PANEL)
+        mission.pack(pady=(24, 0), fill="x")
+        tk.Label(
+            mission, text="YOUR MISSION", bg=PANEL, fg=GOLD, font=(FONT, 10, "bold")
+        ).pack(pady=(16, 6))
+        tk.Label(
+            mission,
+            text=(
+                "The AI tries to guess which tile you will pick, before you pick it.\n"
+                f"Keep its accuracy under {WIN_THRESHOLD * 100:g}% for {TOTAL_ROUNDS} rounds.\n"
+                "The tiles shuffle after every round. Be unpredictable."
+            ),
+            bg=PANEL, fg=FG, font=(FONT, 13), justify="center", padx=40,
+        ).pack(pady=(0, 18))
+
+        # Startknop met hover-effect
+        button = tk.Label(
+            card, text="PLAY", bg=ACCENT, fg="#ffffff", font=(FONT, 20, "bold"),
+            padx=80, pady=14, cursor="hand2",
+        )
+        button.pack(pady=(26, 8))
+        button.bind("<Button-1>", lambda e: self.on_start())
+        button.bind("<Enter>", lambda e: button.config(bg="#9a8dff"))
+        button.bind("<Leave>", lambda e: button.config(bg=ACCENT))
+        tk.Label(
+            card, text="or press Enter", bg=BG, fg=MUTED, font=(FONT, 10)
+        ).pack()
+
+        # Verwijzing onderaan het scherm
+        tk.Label(
+            self, text=f"Want to know more? Ask {CREATOR_NAME} for an explanation.",
+            bg=BG, fg=MUTED, font=(FONT, 11),
+        ).place(relx=0.5, rely=1.0, y=-28, anchor="s")
+
+    def start(self):
+        # Start de zweefanimatie
+        self.stop()
+        self.tick = 0
+        self._animate()
+
+    def stop(self):
+        if self.job is not None:
+            self.after_cancel(self.job)
+            self.job = None
+
+    def _animate(self):
+        # Elk kleurvlak zweeft met een eigen fase, zodat ze een golf vormen
+        for i, item in enumerate(self.tiles):
+            dy = math.sin(self.tick * 0.12 + i * 0.9) * 8
+            self.canvas.move(item, 0, dy - self.offsets[i])
+            self.offsets[i] = dy
+        self.tick += 1
+        self.job = self.after(33, self._animate)
 
 
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Color Oracle")
+        self.title("Colour Oracle")
         self.configure(bg=BG)
         self.geometry("1120x740")
         self.minsize(1040, 700)
@@ -730,7 +964,6 @@ class App(tk.Tk):
         self.hits = 0
         self.jobs = []              # geplande after-taken, zodat ze te annuleren zijn
         self.dev_open = False       # staat het dev screen open
-        self.show_weights = False   # schakelaar: strategiegewichten tonen
         self.show_prediction = False  # schakelaar: AI-voorspelling tonen voor de keuze
 
         self._build()
@@ -742,7 +975,7 @@ class App(tk.Tk):
         self.bind("<Control-Shift-d>", self._toggle_dev)
         self.bind("<Return>", self._restart_key)
         self.bind("<space>", self._restart_key)
-        self.new_game()
+        self.show_home()
 
     # ----- indeling -------------------------------------------------------
     def _stat(self, parent, title, column):
@@ -769,7 +1002,7 @@ class App(tk.Tk):
         self.dev_frame = tk.Frame(self, bg=PANEL, padx=16, pady=14)
 
         tk.Label(
-            left, text="Color Oracle", bg=BG, fg=FG, font=(FONT, 30, "bold")
+            left, text="Colour Oracle", bg=BG, fg=FG, font=(FONT, 30, "bold")
         ).pack()
         tk.Label(
             left,
@@ -811,7 +1044,7 @@ class App(tk.Tk):
         )
         self.card_text.pack(pady=(0, 12))
 
-        self.board = TileBoard(left, self.pick_color)
+        self.board = TileBoard(left, self.pick_colour)
         self.board.pack(pady=(10, 0))
         tk.Label(
             left,
@@ -833,16 +1066,15 @@ class App(tk.Tk):
             dev, text="Showcase only. Nothing here changes how the AI predicts.",
             bg=PANEL, fg=MUTED, font=(FONT, 9), wraplength=BrainPanel.W, justify="left",
         ).pack(anchor="w", pady=(0, 10))
-        self.weights_toggle = self._toggle(dev, "Show strategy weights", self._toggle_weights)
         self.prediction_toggle = self._toggle(
             dev, "Show AI prediction before pick", self._toggle_prediction
         )
-        # De houder met de balken verschijnt alleen als de schakelaar aan staat
-        self.brain_holder = tk.Frame(dev, bg=PANEL)
+        # De strategieën en gewichten staan er altijd, dus het paneel heeft een vaste grootte
         tk.Label(
-            self.brain_holder, text="Live strategy weights", bg=PANEL, fg=MUTED, font=(FONT, 9)
+            dev, text="Live strategy weights", bg=PANEL, fg=MUTED, font=(FONT, 9)
         ).pack(anchor="w", pady=(10, 8))
-        self.brain_panel = BrainPanel(self.brain_holder, len(self.brain.strategies))
+        sub_rows = 3 if "reaction" in self.brain.active else 0   # de drie vertrouwensbalken
+        self.brain_panel = BrainPanel(dev, len(self.brain.strategies), sub_rows)
         self.brain_panel.pack()
 
     def _toggle(self, parent, text, command):
@@ -870,6 +1102,8 @@ class App(tk.Tk):
         )
 
     def _build_overlay(self):
+        # Het beginscherm bedekt het hele venster tot de speler op PLAY drukt
+        self.home = HomeScreen(self, self.start_game)
         # Scherm voor overwinning of nederlaag, bedekt het hele venster
         self.overlay = tk.Frame(self, bg=BG)
         card = tk.Frame(self.overlay, bg=PANEL)
@@ -890,10 +1124,16 @@ class App(tk.Tk):
             card, text="PLAY AGAIN", bg=ACCENT, fg="#ffffff", font=(FONT, 18, "bold"),
             padx=54, pady=14, cursor="hand2",
         )
-        self.play_button.pack(pady=(26, 36))
+        self.play_button.pack(pady=(26, 10))
         self.play_button.bind("<Button-1>", lambda e: self.new_game())
         self.play_button.bind("<Enter>", lambda e: self.play_button.config(bg="#9a8dff"))
         self.play_button.bind("<Leave>", lambda e: self.play_button.config(bg=ACCENT))
+        # Terug naar het beginscherm
+        menu_button = tk.Label(
+            card, text="Back to menu", bg=PANEL, fg=MUTED, font=(FONT, 11), cursor="hand2"
+        )
+        menu_button.pack(pady=(0, 30))
+        menu_button.bind("<Button-1>", lambda e: self.show_home())
 
     # ----- dev screen -----------------------------------------------------
     def _toggle_dev(self, event=None):
@@ -902,17 +1142,9 @@ class App(tk.Tk):
         if self.dev_open:
             self.dev_frame.place(relx=1.0, x=-16, y=16, anchor="ne")
             self.dev_frame.lift()
-        else:
-            self.dev_frame.place_forget()
-
-    def _toggle_weights(self):
-        self.show_weights = not self.show_weights
-        self._paint_toggle(self.weights_toggle, self.show_weights)
-        if self.show_weights:
-            self.brain_holder.pack(anchor="w")
             self._render_brain()
         else:
-            self.brain_holder.pack_forget()
+            self.dev_frame.place_forget()
 
     def _toggle_prediction(self):
         self.show_prediction = not self.show_prediction
@@ -922,9 +1154,19 @@ class App(tk.Tk):
             self._seal_card()
 
     def _render_brain(self):
-        self.brain_panel.render(
-            [(s.label, w) for s, w in zip(self.brain.strategies, self.brain.weights)]
-        )
+        items = [(s.label, w) for s, w in zip(self.brain.strategies, self.brain.weights)]
+        # Onder de Dodge & Reaction Tracker staat het vertrouwen per zichtbaar signaal
+        subs, after = (), None
+        for i, strategy in enumerate(self.brain.strategies):
+            if isinstance(strategy, ReactionStrategy):
+                trust = strategy.trust
+                subs = [
+                    ("Accuracy readout", trust["accuracy"]),
+                    ("AI hit or miss", trust["ai_result"]),
+                    ("Tile movement", trust["movement"]),
+                ]
+                after = i
+        self.brain_panel.render(items, subs, after)
 
     # ----- spelverloop ----------------------------------------------------
     def _after(self, ms, fn):
@@ -938,9 +1180,28 @@ class App(tk.Tk):
         self.board.cancel()
 
     def _restart_key(self, event=None):
-        # Enter of spatie start alleen een nieuw spel op het eindscherm
+        # Enter of spatie start een nieuw spel op het eindscherm en op het beginscherm
         if self.phase == "over":
             self.new_game()
+        elif self.phase == "home":
+            self.start_game()
+
+    def show_home(self):
+        # Toon het beginscherm. Het spel staat vergrendeld tot de speler start.
+        self._cancel_jobs()
+        self.overlay.place_forget()
+        self.phase = "home"
+        self.board.locked = True
+        self.home.place(x=0, y=0, relwidth=1, relheight=1)
+        self.home.lift()
+        self.home.start()
+        if self.dev_open:
+            self.dev_frame.lift()
+
+    def start_game(self):
+        self.home.stop()
+        self.home.place_forget()
+        self.new_game()
 
     def new_game(self):
         self._cancel_jobs()
@@ -958,22 +1219,22 @@ class App(tk.Tk):
         self._seal_card()
         self._refresh()
 
-    def pick_color(self, color):
+    def pick_colour(self, colour):
         # Een klik op een tegel wordt omgezet naar de schermpositie van die kleur
-        self.pick_position(self.order.index(color))
+        self.pick_position(self.order.index(colour))
 
     def pick_position(self, pos):
         if self.phase != "waiting":
             return
         self.phase = "reveal"
         self.board.locked = True
-        color = self.order[pos]
+        colour = self.order[pos]
         predicted = self.brain.final   # de gok stond al vast voor deze keuze
         hit = self.brain.resolve(pos)  # pas nu leert de AI van de keuze
         self.rounds += 1
         self.hits += int(hit)
-        self.board.highlight(color, predicted)
-        self.chip.config(text="", bg=COLORS[NAMES[predicted]])
+        self.board.highlight(colour, predicted)
+        self.chip.config(text="", bg=COLOURS[NAMES[predicted]])
         self.card_text.config(
             text=f"AI predicted {NAMES[predicted]}.  {'HIT' if hit else 'MISS'}",
             fg=BAD if hit else GOOD,
@@ -1044,7 +1305,7 @@ class App(tk.Tk):
         # Anders blijft de kaart verzegeld met een vraagteken.
         if self.show_prediction:
             predicted = self.brain.final
-            self.chip.config(text="", bg=COLORS[NAMES[predicted]])
+            self.chip.config(text="", bg=COLOURS[NAMES[predicted]])
             self.card_text.config(text=f"AI has locked in {NAMES[predicted]}.", fg=FG)
             return
         self.chip.config(text="?", bg=PANEL2)
@@ -1073,7 +1334,7 @@ class App(tk.Tk):
             fg=BAD if self.hits > MAX_AI_HITS else MUTED,
         )
         self._draw_progress()
-        if self.show_weights:
+        if self.dev_open:
             self._render_brain()
 
 
