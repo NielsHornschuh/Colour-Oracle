@@ -14,6 +14,13 @@ Starten:  python colour_oracle.py
 Nodig:    Python 3.9+ met Tkinter. Geen pakketten van derden.
 """
 
+__lazy_modules__ = {
+    "math",
+    "random",
+    "tkinter",
+    "collections",
+}
+
 import math
 import random
 import tkinter as tk
