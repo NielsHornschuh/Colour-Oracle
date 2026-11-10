@@ -1,4 +1,4 @@
-"""Color Oracle: houd de nauwkeurigheid van de AI onder de drempel (WIN_THRESHOLD) gedurende 100 rondes.
+"""Colour Oracle: houd de nauwkeurigheid van de AI onder de drempel (WIN_THRESHOLD) gedurende 100 rondes.
 
 Elke ronde staan de vier gekleurde tegels in willekeurige volgorde. De AI legt
 een voorspelling vast, jij kiest een tegel, daarna wordt de gok van de AI
@@ -9,6 +9,9 @@ Dev screen: druk op Ctrl+Shift+D om het zijmenu te openen of te sluiten. Het
 menu toont altijd de strategieën met hun gewichten en heeft één schakelaar,
 uit bij de start: de voorspelling van de AI voor de keuze. Niets in het menu
 verandert hoe de AI voorspelt.
+
+Taal: kies NL of EN rechtsboven op het beginscherm. DEFAULT_LANGUAGE bepaalt
+de taal bij het opstarten.
 
 Starten:  python colour_oracle.py
 Nodig:    Python 3.9+ met Tkinter. Geen pakketten van derden.
@@ -39,9 +42,9 @@ from collections import defaultdict, deque
 # Spelinstellingen
 # ---------------------------------------------------------------------------
 TOTAL_ROUNDS = 100       # vaste spellengte
-WIN_THRESHOLD = 0.27     # de AI moet strikt onder deze nauwkeurigheid eindigen
+WIN_THRESHOLD = 0.25     # de AI moet strikt onder deze nauwkeurigheid eindigen
 REVEAL_MS = 750          # hoe lang de gok van de AI zichtbaar blijft na een keuze
-SHUFFLE_MS = 250         # duur van de shuffle animatie
+SHUFFLE_MS = 250         # duur van de schudanimatie
 CREATOR_NAME = "Niels"   # naam op het beginscherm, voor vragen en uitleg
 
 # ---------------------------------------------------------------------------
@@ -85,6 +88,124 @@ GOLD = "#ffc933"
 GOOD = "#2fd18b"
 BAD = "#ff4d5a"
 FONT = "Segoe UI"
+
+
+# ---------------------------------------------------------------------------
+# Taal
+# ---------------------------------------------------------------------------
+DEFAULT_LANGUAGE = "nl"   # taal bij het opstarten: "nl." of "en."
+LANG = DEFAULT_LANGUAGE   # huidige taal, wordt gewijzigd met set_language()
+
+# Alle zichtbare teksten staan hier, per taal. Met {naam} worden waarden ingevuld.
+TEXT = {
+    "en": {
+        "subtitle": "Keep the AI under {pct}% accuracy for {rounds} rounds. Tiles shuffle after every round.",
+        "progress": "PROGRESS", "ai_accuracy": "AI ACCURACY", "ai_hits": "AI HITS",
+        "round_value": "Round {n} / {total}",
+        "left_one": "{n} round left", "left_other": "{n} rounds left",
+        "must_finish": "must finish under {pct}%",
+        "limit": "limit {n}", "defeat_locked": "defeat locked in",
+        "ai_prediction": "AI PREDICTION",
+        "sealed": "Locked in. Make your move.",
+        "locked_in": "AI has locked in {colour}.",
+        "ai_predicted": "AI predicted {colour}.  {result}",
+        "hit": "HIT", "miss": "MISS",
+        "you_ai": "YOU + AI", "you": "YOU", "ai": "AI",
+        "hint": "Click a tile or press 1 to 4. Keys follow the screen position.",
+        "restart": "Restart",
+        "victory": "VICTORY!", "defeat": "DEFEAT!",
+        "win_msg": "You successfully outsmarted the AI's pattern recognition.",
+        "lose_msg": "The AI figured out your patterns.",
+        "final_stats": "Final AI accuracy: {pct:.1f}%   ({hits} {word} in {rounds} rounds)",
+        "word_one": "hit", "word_other": "hits",
+        "win_note": "To win, the AI had to stay under {pct}% ({max} hits or fewer).",
+        "top_strategy": " Its most trusted strategy at the end: {label}.",
+        "play_again": "PLAY AGAIN", "back_menu": "Back to menu",
+        "tagline": "Can you outsmart the AI?",
+        "mission_title": "YOUR MISSION",
+        "mission": "The AI tries to guess which tile you will pick, before you pick it.\nKeep its accuracy under {pct}% for {rounds} rounds.\nThe tiles shuffle after every round. Be unpredictable.",
+        "play": "PLAY", "press_enter": "or press Enter",
+        "footer": "Want to know more? Ask {name} for an explanation.",
+        "dev_title": "DEV SCREEN",
+        "dev_note": "Showcase only. Nothing here changes how the AI predicts.",
+        "dev_prediction": "Show AI prediction before pick",
+        "dev_weights": "Live strategy weights",
+        "on": "ON", "off": "OFF",
+        "trust_accuracy": "Accuracy readout", "trust_ai": "AI hit or miss", "trust_move": "Tile movement",
+        "colour_Red": "Red", "colour_Blue": "Blue", "colour_Green": "Green", "colour_Yellow": "Yellow",
+    },
+    "nl": {
+        "subtitle": "Houd de AI onder {pct}% nauwkeurigheid gedurende {rounds} rondes. De tegels schudden na elke ronde.",
+        "progress": "VOORTGANG", "ai_accuracy": "AI-NAUWKEURIGHEID", "ai_hits": "AI-TREFFERS",
+        "round_value": "Ronde {n} / {total}",
+        "left_one": "nog {n} ronde", "left_other": "nog {n} rondes",
+        "must_finish": "moet onder {pct}% eindigen",
+        "limit": "limiet {n}", "defeat_locked": "verlies staat vast",
+        "ai_prediction": "AI-VOORSPELLING",
+        "sealed": "Vastgelegd. Doe je zet.",
+        "locked_in": "De AI heeft {colour} vastgelegd.",
+        "ai_predicted": "De AI voorspelde {colour}.  {result}",
+        "hit": "RAAK", "miss": "MIS",
+        "you_ai": "JIJ + AI", "you": "JIJ", "ai": "AI",
+        "hint": "Klik op een tegel of druk op 1 tot 4. De toetsen volgen de positie op het scherm.",
+        "restart": "Opnieuw",
+        "victory": "GEWONNEN!", "defeat": "VERLOREN!",
+        "win_msg": "Je bent de patroonherkenning van de AI te slim af geweest.",
+        "lose_msg": "De AI heeft je patronen doorzien.",
+        "final_stats": "Eindnauwkeurigheid AI: {pct:.1f}%   ({hits} {word} in {rounds} rondes)",
+        "word_one": "treffer", "word_other": "treffers",
+        "win_note": "Om te winnen moest de AI onder de {pct}% blijven (maximaal {max} treffers).",
+        "top_strategy": " Meest vertrouwde strategie aan het eind: {label}.",
+        "play_again": "OPNIEUW SPELEN", "back_menu": "Terug naar het menu",
+        "tagline": "Kun jij de AI te slim af zijn?",
+        "mission_title": "JOUW MISSIE",
+        "mission": "De AI probeert te raden welke tegel jij kiest, nog voordat jij kiest.\nHoud de nauwkeurigheid onder de {pct}% gedurende {rounds} rondes.\nDe tegels schudden na elke ronde. Wees onvoorspelbaar.",
+        "play": "SPELEN", "press_enter": "of druk op Enter",
+        "footer": "Wil je meer weten? Vraag het aan {name}.",
+        "dev_title": "DEV-SCHERM",
+        "dev_note": "Alleen voor de showcase. Niets hier verandert hoe de AI voorspelt.",
+        "dev_prediction": "Toon AI-voorspelling voor de keuze",
+        "dev_weights": "Live strategiegewichten",
+        "on": "AAN", "off": "UIT",
+        "trust_accuracy": "Nauwkeurigheid", "trust_ai": "AI raak of mis", "trust_move": "Tegelbeweging",
+        "colour_Red": "Rood", "colour_Blue": "Blauw", "colour_Green": "Groen", "colour_Yellow": "Geel",
+    },
+}
+
+# Nederlandse namen van de strategieën. De Engelse namen staan in de klassen zelf.
+LABEL_NL = {
+    "Markov Chain (1-Step / 2-Step)": "Markov-keten (1-staps / 2-staps)",
+    "Frequency & Recency Bias": "Frequentie- en recentiebias",
+    "Baseline Randomizer": "Basis-willekeurigmaker",
+    "Anti-Streak Predictor": "Anti-reeksvoorspeller",
+    "Step Habit & Position Delta": "Stapgewoonte en positieverschil",
+    "Gambler's Fallacy Balancer": "Gokkersfout-balanceerder",
+    "Dodge & Reaction Tracker": "Ontwijk- en reactietracker",
+    "Position Habit Tracker": "Positiegewoonte-tracker",
+    "Colour-at-Position Tracker": "Kleur-op-positie-tracker",
+}
+
+
+def set_language(code):
+    """Wissel de taal van alle teksten. Onbekende codes worden genegeerd."""
+    global LANG
+    if code in TEXT:
+        LANG = code
+
+
+def tr(key, **values):
+    """Geef de tekst bij `key` in de huidige taal, met de waarden ingevuld."""
+    return TEXT[LANG][key].format(**values)
+
+
+def colour_name(colour):
+    """Naam van een kleur (index) in de huidige taal."""
+    return tr("colour_" + NAMES[colour])
+
+
+def strategy_label(strategy):
+    """Naam van een strategie in de huidige taal."""
+    return LABEL_NL.get(strategy.label, strategy.label) if LANG == "nl" else strategy.label
 
 
 # ---------------------------------------------------------------------------
@@ -546,7 +667,7 @@ class PairStrategy:
     positie en kleur getoond is en hoe vaak het gekozen is.
     """
 
-    label = "Color-at-Position Tracker"
+    label = "Colour-at-Position Tracker"
 
     def __init__(self, rng=None):
         self.chosen = [[0] * N for _ in range(N)]   # chosen[positie][kleur]
@@ -687,6 +808,7 @@ class TileBoard(tk.Canvas):
         self.pos_y = {c: 0.0 for c in range(N)}
         self.rects = {}
         self.badges = {}
+        self.names = {}          # tekst met de kleurnaam op elke tegel
         # Cijfers 1 tot 4 onder de vaste posities
         for pos in range(N):
             cx = self.slot_x(pos) + self.TILE_W / 2
@@ -703,8 +825,8 @@ class TileBoard(tk.Canvas):
                 rounded_points(x, self.TOP, x + self.TILE_W, self.TOP + self.TILE_H, 24),
                 smooth=True, fill=fill, outline=fill, width=4, tags=(tag,),
             )
-            self.create_text(
-                x + self.TILE_W / 2, self.TOP + self.TILE_H / 2, text=NAMES[colour],
+            self.names[colour] = self.create_text(
+                x + self.TILE_W / 2, self.TOP + self.TILE_H / 2, text=colour_name(colour),
                 fill="#10131c", font=(FONT, 17, "bold"), tags=(tag,),
             )
             # Label boven de tegel (YOU, AI of YOU + AI), eerst verborgen
@@ -716,6 +838,11 @@ class TileBoard(tk.Canvas):
             self.tag_bind(tag, "<Button-1>", lambda e, c=colour: self._click(c))
             self.tag_bind(tag, "<Enter>", lambda e, c=colour: self._hover(c, True))
             self.tag_bind(tag, "<Leave>", lambda e, c=colour: self._hover(c, False))
+
+    def relabel(self):
+        # Pas de kleurnamen aan na een taalwissel
+        for colour in range(N):
+            self.itemconfig(self.names[colour], text=colour_name(colour))
 
     def slot_x(self, pos):
         # x-coördinaat van de linkerrand van een positie
@@ -775,12 +902,12 @@ class TileBoard(tk.Canvas):
             self.itemconfig(self.badges[c], text="", state="hidden")
         if picked == predicted:
             self.itemconfig(self.rects[picked], outline="#ffffff", width=6)
-            self.itemconfig(self.badges[picked], text="YOU + AI", fill=BAD, state="normal")
+            self.itemconfig(self.badges[picked], text=tr("you_ai"), fill=BAD, state="normal")
             return
         self.itemconfig(self.rects[picked], outline="#ffffff", width=6)
-        self.itemconfig(self.badges[picked], text="YOU", fill=FG, state="normal")
+        self.itemconfig(self.badges[picked], text=tr("you"), fill=FG, state="normal")
         self.itemconfig(self.rects[predicted], outline="#ffffff", width=4, dash=(8, 6))
-        self.itemconfig(self.badges[predicted], text="AI", fill=ACCENT, state="normal")
+        self.itemconfig(self.badges[predicted], text=tr("ai"), fill=ACCENT, state="normal")
 
     def clear_highlight(self):
         for c in range(N):
@@ -861,14 +988,15 @@ class BrainPanel(tk.Canvas):
 
 
 class HomeScreen(tk.Frame):
-    """Beginscherm: titel, doel van het spel, een startknop en een verwijzing voor uitleg."""
+    """Beginscherm: titel, doel van het spel, taalkeuze, een startknop en een verwijzing voor uitleg."""
 
     TILE = 74    # zijde van elk decoratief kleurvlak
     GAP = 16     # ruimte tussen de kleurvlakken
 
-    def __init__(self, master, on_start):
+    def __init__(self, master, on_start, on_language):
         super().__init__(master, bg=BG)
         self.on_start = on_start
+        self.on_language = on_language
         self.job = None          # lopende animatiestap
         self.tick = 0
         self.offsets = [0.0] * N  # huidige verticale afwijking per kleurvlak
@@ -904,44 +1032,65 @@ class HomeScreen(tk.Frame):
                 title, text=char, bg=BG, fg=palette[shade % N], font=(FONT, 60, "bold")
             ).pack(side="left")
             shade += 1
-        tk.Label(
-            card, text="Can you outsmart the AI?", bg=BG, fg=FG, font=(FONT, 18)
-        ).pack(pady=(2, 0))
+        self.tagline = tk.Label(card, text="", bg=BG, fg=FG, font=(FONT, 18))
+        self.tagline.pack(pady=(2, 0))
 
         # Kaart met het doel van het spel
         mission = tk.Frame(card, bg=PANEL)
         mission.pack(pady=(24, 0), fill="x")
-        tk.Label(
-            mission, text="YOUR MISSION", bg=PANEL, fg=GOLD, font=(FONT, 10, "bold")
-        ).pack(pady=(16, 6))
-        tk.Label(
-            mission,
-            text=(
-                "The AI tries to guess which tile you will pick, before you pick it.\n"
-                f"Keep its accuracy under {WIN_THRESHOLD * 100:g}% for {TOTAL_ROUNDS} rounds.\n"
-                "The tiles shuffle after every round. Be unpredictable."
-            ),
-            bg=PANEL, fg=FG, font=(FONT, 13), justify="center", padx=40,
-        ).pack(pady=(0, 18))
+        self.mission_title = tk.Label(
+            mission, text="", bg=PANEL, fg=GOLD, font=(FONT, 10, "bold")
+        )
+        self.mission_title.pack(pady=(16, 6))
+        self.mission_text = tk.Label(
+            mission, text="", bg=PANEL, fg=FG, font=(FONT, 13), justify="center", padx=40,
+        )
+        self.mission_text.pack(pady=(0, 18))
 
         # Startknop met hover-effect
-        button = tk.Label(
-            card, text="PLAY", bg=ACCENT, fg="#ffffff", font=(FONT, 20, "bold"),
+        self.button = tk.Label(
+            card, text="", bg=ACCENT, fg="#ffffff", font=(FONT, 20, "bold"),
             padx=80, pady=14, cursor="hand2",
         )
-        button.pack(pady=(26, 8))
-        button.bind("<Button-1>", lambda e: self.on_start())
-        button.bind("<Enter>", lambda e: button.config(bg="#9a8dff"))
-        button.bind("<Leave>", lambda e: button.config(bg=ACCENT))
-        tk.Label(
-            card, text="or press Enter", bg=BG, fg=MUTED, font=(FONT, 10)
-        ).pack()
+        self.button.pack(pady=(26, 8))
+        self.button.bind("<Button-1>", lambda e: self.on_start())
+        self.button.bind("<Enter>", lambda e: self.button.config(bg="#9a8dff"))
+        self.button.bind("<Leave>", lambda e: self.button.config(bg=ACCENT))
+        self.enter_hint = tk.Label(card, text="", bg=BG, fg=MUTED, font=(FONT, 10))
+        self.enter_hint.pack()
 
         # Verwijzing onderaan het scherm
-        tk.Label(
-            self, text=f"Want to know more? Ask {CREATOR_NAME} for an explanation.",
-            bg=BG, fg=MUTED, font=(FONT, 11),
-        ).place(relx=0.5, rely=1.0, y=-28, anchor="s")
+        self.footer = tk.Label(self, text="", bg=BG, fg=MUTED, font=(FONT, 11))
+        self.footer.place(relx=0.5, rely=1.0, y=-28, anchor="s")
+
+        # Taalkeuze rechtsboven
+        switch = tk.Frame(self, bg=BG)
+        switch.place(relx=1.0, x=-24, y=20, anchor="ne")
+        self.language_buttons = {}
+        for code in ("nl", "en"):
+            label = tk.Label(
+                switch, text=code.upper(), font=(FONT, 11, "bold"), padx=12, pady=5,
+                cursor="hand2",
+            )
+            label.pack(side="left", padx=2)
+            label.bind("<Button-1>", lambda e, c=code: self.on_language(c))
+            self.language_buttons[code] = label
+
+        self.relabel()
+
+    def relabel(self):
+        # Zet alle teksten in de huidige taal en markeer de gekozen taal
+        self.tagline.config(text=tr("tagline"))
+        self.mission_title.config(text=tr("mission_title"))
+        self.mission_text.config(
+            text=tr("mission", pct=f"{WIN_THRESHOLD * 100:g}", rounds=TOTAL_ROUNDS)
+        )
+        self.button.config(text=tr("play"))
+        self.enter_hint.config(text=tr("press_enter"))
+        self.footer.config(text=tr("footer", name=CREATOR_NAME))
+        for code, label in self.language_buttons.items():
+            active = code == LANG
+            label.config(bg=ACCENT if active else PANEL2, fg="#ffffff" if active else MUTED)
 
     def start(self):
         # Start de zweefanimatie
@@ -991,22 +1140,22 @@ class App(tk.Tk):
         self.bind("<Control-Shift-d>", self._toggle_dev)
         self.bind("<Return>", self._restart_key)
         self.bind("<space>", self._restart_key)
+        self._apply_language()
         self.show_home()
 
     # ----- indeling -------------------------------------------------------
-    def _stat(self, parent, title, column):
+    def _stat(self, parent, column):
         # Eén statistiekvak met titel, waarde en onderschrift. De grid met
         # uniform kolommen houdt alle vakken even breed en even hoog.
         box = tk.Frame(parent, bg=PANEL)
         box.grid(row=0, column=column, sticky="nsew", padx=6)
-        tk.Label(box, text=title, bg=PANEL, fg=MUTED, font=(FONT, 9, "bold")).pack(
-            pady=(10, 0)
-        )
+        title = tk.Label(box, text="", bg=PANEL, fg=MUTED, font=(FONT, 9, "bold"))
+        title.pack(pady=(10, 0))
         value = tk.Label(box, text="", bg=PANEL, fg=FG, font=(FONT, 24, "bold"))
         value.pack()
         caption = tk.Label(box, text="", bg=PANEL, fg=MUTED, font=(FONT, 9))
         caption.pack(pady=(0, 10))
-        return value, caption
+        return title, value, caption
 
     def _build(self):
         body = tk.Frame(self, bg=BG)
@@ -1020,23 +1169,17 @@ class App(tk.Tk):
         tk.Label(
             left, text="Colour Oracle", bg=BG, fg=FG, font=(FONT, 30, "bold")
         ).pack()
-        tk.Label(
-            left,
-            text=(
-                f"Keep the AI under {WIN_THRESHOLD * 100:g}% accuracy for {TOTAL_ROUNDS} "
-                "rounds. Tiles shuffle after every round."
-            ),
-            bg=BG, fg=MUTED, font=(FONT, 11),
-        ).pack(pady=(0, 12))
+        self.subtitle = tk.Label(left, text="", bg=BG, fg=MUTED, font=(FONT, 11))
+        self.subtitle.pack(pady=(0, 12))
 
         # Drie statistiekvakken: voortgang, nauwkeurigheid en treffers
         stats = tk.Frame(left, bg=BG)
         stats.pack(fill="x")
         for column in range(3):
             stats.columnconfigure(column, weight=1, uniform="stat")
-        self.round_value, self.round_caption = self._stat(stats, "PROGRESS", 0)
-        self.acc_value, self.acc_caption = self._stat(stats, "AI ACCURACY", 1)
-        self.hits_value, self.hits_caption = self._stat(stats, "AI HITS", 2)
+        self.round_title, self.round_value, self.round_caption = self._stat(stats, 0)
+        self.acc_title, self.acc_value, self.acc_caption = self._stat(stats, 1)
+        self.hits_title, self.hits_value, self.hits_caption = self._stat(stats, 2)
 
         # Voortgangsbalk, tekent zichzelf opnieuw bij elke formaatwijziging
         self.progress = tk.Canvas(left, height=10, bg=BG, highlightthickness=0)
@@ -1046,9 +1189,10 @@ class App(tk.Tk):
         # Kaart met de voorspelling van de AI
         card = tk.Frame(left, bg=PANEL)
         card.pack(fill="x", padx=6, pady=4)
-        tk.Label(card, text="AI PREDICTION", bg=PANEL, fg=MUTED, font=(FONT, 9, "bold")).pack(
-            pady=(10, 4)
+        self.prediction_title = tk.Label(
+            card, text="", bg=PANEL, fg=MUTED, font=(FONT, 9, "bold")
         )
+        self.prediction_title.pack(pady=(10, 4))
         # Het kleurvlak staat boven de tekst en beide staan in het midden. Zo
         # blijft de plek gelijk, ook als de tekst van lengte wisselt.
         self.chip = tk.Label(
@@ -1062,14 +1206,11 @@ class App(tk.Tk):
 
         self.board = TileBoard(left, self.pick_colour)
         self.board.pack(pady=(10, 0))
-        tk.Label(
-            left,
-            text="Click a tile or press 1 to 4. Keys follow the screen position.",
-            bg=BG, fg=MUTED, font=(FONT, 10),
-        ).pack()
+        self.hint_label = tk.Label(left, text="", bg=BG, fg=MUTED, font=(FONT, 10))
+        self.hint_label.pack()
 
-        restart = tk.Label(
-            left, text="Restart", bg=PANEL2, fg=MUTED, font=(FONT, 10, "bold"),
+        self.restart_button = restart = tk.Label(
+            left, text="", bg=PANEL2, fg=MUTED, font=(FONT, 10, "bold"),
             padx=16, pady=6, cursor="hand2",
         )
         restart.pack(side="bottom", pady=(8, 0))
@@ -1077,18 +1218,20 @@ class App(tk.Tk):
 
         # Inhoud van het dev screen: uitleg, twee schakelaars en het gewichtenpaneel
         dev = self.dev_frame
-        tk.Label(dev, text="DEV SCREEN", bg=PANEL, fg=FG, font=(FONT, 12, "bold")).pack(anchor="w")
-        tk.Label(
-            dev, text="Showcase only. Nothing here changes how the AI predicts.",
-            bg=PANEL, fg=MUTED, font=(FONT, 9), wraplength=BrainPanel.W, justify="left",
-        ).pack(anchor="w", pady=(0, 10))
-        self.prediction_toggle = self._toggle(
-            dev, "Show AI prediction before pick", self._toggle_prediction
+        self.dev_title = tk.Label(dev, text="", bg=PANEL, fg=FG, font=(FONT, 12, "bold"))
+        self.dev_title.pack(anchor="w")
+        # Vaste hoogte van twee regels, zodat het paneel in elke taal even groot blijft
+        self.dev_note = tk.Label(
+            dev, text="", bg=PANEL, fg=MUTED, font=(FONT, 9), wraplength=BrainPanel.W,
+            justify="left", anchor="nw", height=2,
+        )
+        self.dev_note.pack(anchor="w", fill="x", pady=(0, 10))
+        self.prediction_name, self.prediction_toggle = self._toggle(
+            dev, "", self._toggle_prediction
         )
         # De strategieën en gewichten staan er altijd, dus het paneel heeft een vaste grootte
-        tk.Label(
-            dev, text="Live strategy weights", bg=PANEL, fg=MUTED, font=(FONT, 9)
-        ).pack(anchor="w", pady=(10, 8))
+        self.dev_weights = tk.Label(dev, text="", bg=PANEL, fg=MUTED, font=(FONT, 9))
+        self.dev_weights.pack(anchor="w", pady=(10, 8))
         sub_rows = 3 if "reaction" in self.brain.active else 0   # de drie vertrouwensbalken
         self.brain_panel = BrainPanel(dev, len(self.brain.strategies), sub_rows)
         self.brain_panel.pack()
@@ -1107,19 +1250,19 @@ class App(tk.Tk):
         state.pack(side="right", padx=10)
         for widget in (row, name, state):
             widget.bind("<Button-1>", lambda e: command())
-        return state
+        return name, state
 
     @staticmethod
     def _paint_toggle(state, on):
         # Kleur en tekst van het statuslabel volgen de stand van de schakelaar
         state.config(
-            text="ON" if on else "OFF", bg=GOOD if on else BG,
+            text=tr("on") if on else tr("off"), bg=GOOD if on else BG,
             fg="#10131c" if on else MUTED,
         )
 
     def _build_overlay(self):
         # Het beginscherm bedekt het hele venster tot de speler op PLAY drukt
-        self.home = HomeScreen(self, self.start_game)
+        self.home = HomeScreen(self, self.start_game, self.set_language)
         # Scherm voor overwinning of nederlaag, bedekt het hele venster
         self.overlay = tk.Frame(self, bg=BG)
         card = tk.Frame(self.overlay, bg=PANEL)
@@ -1137,7 +1280,7 @@ class App(tk.Tk):
         )
         self.over_note.pack(padx=40)
         self.play_button = tk.Label(
-            card, text="PLAY AGAIN", bg=ACCENT, fg="#ffffff", font=(FONT, 18, "bold"),
+            card, text="", bg=ACCENT, fg="#ffffff", font=(FONT, 18, "bold"),
             padx=54, pady=14, cursor="hand2",
         )
         self.play_button.pack(pady=(26, 10))
@@ -1145,11 +1288,42 @@ class App(tk.Tk):
         self.play_button.bind("<Enter>", lambda e: self.play_button.config(bg="#9a8dff"))
         self.play_button.bind("<Leave>", lambda e: self.play_button.config(bg=ACCENT))
         # Terug naar het beginscherm
-        menu_button = tk.Label(
-            card, text="Back to menu", bg=PANEL, fg=MUTED, font=(FONT, 11), cursor="hand2"
+        self.menu_button = menu_button = tk.Label(
+            card, text="", bg=PANEL, fg=MUTED, font=(FONT, 11), cursor="hand2"
         )
         menu_button.pack(pady=(0, 30))
         menu_button.bind("<Button-1>", lambda e: self.show_home())
+
+    # ----- taal -----------------------------------------------------------
+    def set_language(self, code):
+        # Wissel de taal en werk alle zichtbare teksten bij
+        set_language(code)
+        self._apply_language()
+
+    def _apply_language(self):
+        # Vaste teksten
+        self.subtitle.config(
+            text=tr("subtitle", pct=f"{WIN_THRESHOLD * 100:g}", rounds=TOTAL_ROUNDS)
+        )
+        self.round_title.config(text=tr("progress"))
+        self.acc_title.config(text=tr("ai_accuracy"))
+        self.hits_title.config(text=tr("ai_hits"))
+        self.prediction_title.config(text=tr("ai_prediction"))
+        self.hint_label.config(text=tr("hint"))
+        self.restart_button.config(text=tr("restart"))
+        self.play_button.config(text=tr("play_again"))
+        self.menu_button.config(text=tr("back_menu"))
+        self.dev_title.config(text=tr("dev_title"))
+        self.dev_note.config(text=tr("dev_note"))
+        self.prediction_name.config(text=tr("dev_prediction"))
+        self.dev_weights.config(text=tr("dev_weights"))
+        self._paint_toggle(self.prediction_toggle, self.show_prediction)
+        self.board.relabel()
+        self.home.relabel()
+        # Teksten die van de spelstand afhangen
+        if self.phase in ("locked", "home", "waiting", "shuffling"):
+            self._seal_card()
+        self._refresh()
 
     # ----- dev screen -----------------------------------------------------
     def _toggle_dev(self, event=None):
@@ -1170,16 +1344,16 @@ class App(tk.Tk):
             self._seal_card()
 
     def _render_brain(self):
-        items = [(s.label, w) for s, w in zip(self.brain.strategies, self.brain.weights)]
+        items = [(strategy_label(s), w) for s, w in zip(self.brain.strategies, self.brain.weights)]
         # Onder de Dodge & Reaction Tracker staat het vertrouwen per zichtbaar signaal
         subs, after = (), None
         for i, strategy in enumerate(self.brain.strategies):
             if isinstance(strategy, ReactionStrategy):
                 trust = strategy.trust
                 subs = [
-                    ("Accuracy readout", trust["accuracy"]),
-                    ("AI hit or miss", trust["ai_result"]),
-                    ("Tile movement", trust["movement"]),
+                    (tr("trust_accuracy"), trust["accuracy"]),
+                    (tr("trust_ai"), trust["ai_result"]),
+                    (tr("trust_move"), trust["movement"]),
                 ]
                 after = i
         self.brain_panel.render(items, subs, after)
@@ -1252,7 +1426,10 @@ class App(tk.Tk):
         self.board.highlight(colour, predicted)
         self.chip.config(text="", bg=COLOURS[NAMES[predicted]])
         self.card_text.config(
-            text=f"AI predicted {NAMES[predicted]}.  {'HIT' if hit else 'MISS'}",
+            text=tr(
+                "ai_predicted", colour=colour_name(predicted),
+                result=tr("hit") if hit else tr("miss"),
+            ),
             fg=BAD if hit else GOOD,
         )
         self._refresh()
@@ -1281,26 +1458,23 @@ class App(tk.Tk):
         self.board.locked = True
         accuracy = self.hits / TOTAL_ROUNDS * 100
         if self.hits <= MAX_AI_HITS:
-            self.over_title.config(text="VICTORY!", fg=GOOD)
-            self.over_message.config(
-                text="You successfully outsmarted the AI's pattern recognition."
-            )
+            self.over_title.config(text=tr("victory"), fg=GOOD)
+            self.over_message.config(text=tr("win_msg"))
         else:
-            self.over_title.config(text="DEFEAT!", fg=BAD)
-            self.over_message.config(text="The AI figured out your patterns.")
-        plural = "hit" if self.hits == 1 else "hits"
+            self.over_title.config(text=tr("defeat"), fg=BAD)
+            self.over_message.config(text=tr("lose_msg"))
+        word = tr("word_one") if self.hits == 1 else tr("word_other")
         self.over_stats.config(
-            text=f"Final AI accuracy: {accuracy:.1f}%   ({self.hits} {plural} in {TOTAL_ROUNDS} rounds)"
+            text=tr(
+                "final_stats", pct=accuracy, hits=self.hits, word=word, rounds=TOTAL_ROUNDS
+            )
         )
-        note = (
-            f"To win, the AI had to stay under {WIN_THRESHOLD * 100:g}% "
-            f"({MAX_AI_HITS} hits or fewer)."
-        )
+        note = tr("win_note", pct=f"{WIN_THRESHOLD * 100:g}", max=MAX_AI_HITS)
         if self.hits > MAX_AI_HITS:
             # Bij een nederlaag: noem de strategie met het hoogste gewicht
             weights = self.brain.weights
             top = max(range(len(weights)), key=lambda i: weights[i])
-            note += f" Its most trusted strategy at the end: {self.brain.strategies[top].label}."
+            note += tr("top_strategy", label=strategy_label(self.brain.strategies[top]))
         self.over_note.config(text=note)
         self.overlay.place(x=0, y=0, relwidth=1, relheight=1)
         self.overlay.lift()
@@ -1322,19 +1496,21 @@ class App(tk.Tk):
         if self.show_prediction:
             predicted = self.brain.final
             self.chip.config(text="", bg=COLOURS[NAMES[predicted]])
-            self.card_text.config(text=f"AI has locked in {NAMES[predicted]}.", fg=FG)
+            self.card_text.config(text=tr("locked_in", colour=colour_name(predicted)), fg=FG)
             return
         self.chip.config(text="?", bg=PANEL2)
-        self.card_text.config(text="Locked in. Make your move.", fg=FG)
+        self.card_text.config(text=tr("sealed"), fg=FG)
 
     def _refresh(self):
         # Rondeteller: tijdens het wachten en schudden telt de lopende ronde mee
         current = min(self.rounds + (1 if self.phase in ("waiting", "shuffling") else 0),
                       TOTAL_ROUNDS)
         current = max(current, 1)
-        self.round_value.config(text=f"Round {current} / {TOTAL_ROUNDS}")
+        self.round_value.config(text=tr("round_value", n=current, total=TOTAL_ROUNDS))
         left = TOTAL_ROUNDS - self.rounds
-        self.round_caption.config(text=f"{left} round{'s' if left != 1 else ''} left")
+        self.round_caption.config(
+            text=tr("left_one" if left == 1 else "left_other", n=left)
+        )
         # Nauwkeurigheid: groen onder de drempel, rood erboven
         if self.rounds:
             accuracy = self.hits / self.rounds * 100
@@ -1342,11 +1518,11 @@ class App(tk.Tk):
             self.acc_value.config(text=f"{accuracy:.1f}%", fg=GOOD if under else BAD)
         else:
             self.acc_value.config(text="--", fg=FG)
-        self.acc_caption.config(text=f"must finish under {WIN_THRESHOLD * 100:g}%")
+        self.acc_caption.config(text=tr("must_finish", pct=f"{WIN_THRESHOLD * 100:g}"))
         # Zodra de treffers boven het maximum uitkomen, staat de nederlaag vast
         self.hits_value.config(text=str(self.hits), fg=BAD if self.hits > MAX_AI_HITS else FG)
         self.hits_caption.config(
-            text="defeat locked in" if self.hits > MAX_AI_HITS else f"limit {MAX_AI_HITS}",
+            text=tr("defeat_locked") if self.hits > MAX_AI_HITS else tr("limit", n=MAX_AI_HITS),
             fg=BAD if self.hits > MAX_AI_HITS else MUTED,
         )
         self._draw_progress()
