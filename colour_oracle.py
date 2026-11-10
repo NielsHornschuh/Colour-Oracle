@@ -172,19 +172,6 @@ TEXT = {
     },
 }
 
-# Nederlandse namen van de strategieën. De Engelse namen staan in de klassen zelf.
-LABEL_NL = {
-    "Markov Chain (1-Step / 2-Step)": "Markov-keten (1-staps / 2-staps)",
-    "Frequency & Recency Bias": "Frequentie- en recentiebias",
-    "Baseline Randomizer": "Basis-willekeurigmaker",
-    "Anti-Streak Predictor": "Anti-reeksvoorspeller",
-    "Step Habit & Position Delta": "Stapgewoonte en positieverschil",
-    "Gambler's Fallacy Balancer": "Gokkersfout-balanceerder",
-    "Dodge & Reaction Tracker": "Ontwijk- en reactietracker",
-    "Position Habit Tracker": "Positiegewoonte-tracker",
-    "Colour-at-Position Tracker": "Kleur-op-positie-tracker",
-}
-
 
 def set_language(code):
     """Wissel de taal van alle teksten. Onbekende codes worden genegeerd."""
@@ -201,11 +188,6 @@ def tr(key, **values):
 def colour_name(colour):
     """Naam van een kleur (index) in de huidige taal."""
     return tr("colour_" + NAMES[colour])
-
-
-def strategy_label(strategy):
-    """Naam van een strategie in de huidige taal."""
-    return LABEL_NL.get(strategy.label, strategy.label) if LANG == "nl" else strategy.label
 
 
 # ---------------------------------------------------------------------------
@@ -1344,7 +1326,7 @@ class App(tk.Tk):
             self._seal_card()
 
     def _render_brain(self):
-        items = [(strategy_label(s), w) for s, w in zip(self.brain.strategies, self.brain.weights)]
+        items = [(s.label, w) for s, w in zip(self.brain.strategies, self.brain.weights)]
         # Onder de Dodge & Reaction Tracker staat het vertrouwen per zichtbaar signaal
         subs, after = (), None
         for i, strategy in enumerate(self.brain.strategies):
@@ -1474,7 +1456,7 @@ class App(tk.Tk):
             # Bij een nederlaag: noem de strategie met het hoogste gewicht
             weights = self.brain.weights
             top = max(range(len(weights)), key=lambda i: weights[i])
-            note += tr("top_strategy", label=strategy_label(self.brain.strategies[top]))
+            note += tr("top_strategy", strategy=self.brain.strategies[top])
         self.over_note.config(text=note)
         self.overlay.place(x=0, y=0, relwidth=1, relheight=1)
         self.overlay.lift()
