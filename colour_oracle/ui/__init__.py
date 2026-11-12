@@ -1,0 +1,1 @@
+"""Alles wat je ziet: het venster, de tegels, de panelen en de schermen."""
