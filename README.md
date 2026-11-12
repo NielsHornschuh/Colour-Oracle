@@ -13,7 +13,7 @@ strategieën die minder goed werken krijgen minder gewicht.
 
 ## Benodigdheden
 
-- Python 3.9 of nieuwer
+- Python 3.9+, 3.15+ aanbevolen (https://www.python.org/downloads/)
 - Tkinter
 
 Er zijn geen externe Python-pakketten nodig. Tkinter wordt meestal automatisch
@@ -75,7 +75,7 @@ De strategieën worden in deze volgorde geladen:
    vorige één of twee gekozen kleuren.
 2. **Frequency & Recency Bias** (`bias`) — combineert keuze-frequentie met
    extra gewicht voor recente keuzes.
-3. **Baseline Randomizer** (`random`) — een zachte willekeurige basisvoorspeller.
+3. **Baseline Randomizer** (`random`) — een zachte willekeurige 'basisvoorspeller'.
 4. **Anti-Streak Predictor** (`streak`) — herkent reeksen en voorspelt een
    herhaling of wissel.
 5. **Step Habit & Position Delta** (`step`) — leert patronen in sprongen tussen
@@ -120,7 +120,7 @@ Druk tijdens het spel op **Ctrl+Shift+D** om het dev screen te openen. Het
 toont de live gewichten van alle strategieën. Als `reaction` actief is, worden
 ook de drie vertrouwenswaarden van de zichtbare signalen getoond.
 
-Met de schakelaar **Show AI prediction before pick** kun je de voorspelling
+Met de schakelaar **Show AI prediction before pick**, kun je de voorspelling
 vooraf zichtbaar maken. Dit is bedoeld voor demonstraties: het dev screen
 verandert de werking van de AI niet.
 
