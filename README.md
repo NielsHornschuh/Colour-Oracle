@@ -51,16 +51,16 @@ De standaardtaal is Nederlands.
 ## Projectstructuur
 
 ```text
-main.py
-colour_oracle/
-├── config.py                 # spel- en AI-instellingen
-├── constants.py              # kleuren en gedeelde constanten
-├── i18n.py                   # Nederlandse en Engelse teksten
-├── engine/
-│   ├── ensemble.py           # combinatie en gewichten van strategieën
-│   ├── helpers.py            # gedeelde AI-hulpfuncties
-│   └── strategies/           # afzonderlijke voorspellers
-└── ui/                       # Tkinter-schermen, tegels en panelen
+├──main.py
+└──colour_oracle/
+    ├── config.py                 # spel- en AI-instellingen
+    ├── constants.py              # kleuren en gedeelde constanten
+    ├── i18n.py                   # Nederlandse en Engelse teksten
+    ├── engine/
+    │   ├── ensemble.py           # combinatie en gewichten van strategieën
+    │   ├── helpers.py            # gedeelde AI-hulpfuncties
+    │   └── strategies/           # afzonderlijke voorspellers
+    └── ui/                       # Tkinter-schermen, tegels en panelen
 ```
 
 De AI-logica, gebruikersinterface en configuratie zijn van elkaar gescheiden.
